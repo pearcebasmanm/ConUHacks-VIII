@@ -1,20 +1,20 @@
 from typing import TypeAlias
 
-Request: TypeAlias = (str, int, str)
-Schedule: TypeAlias = list[(int, int)]
+Request: TypeAlias = (str, str, str)
+Schedule: TypeAlias = list[(int, int, Request)]
 
 def solve_day(requests: list[Request]) -> (dict[str, Schedule], list[Request]):
-    test: (int, int) = (1, 2)
-    print(test[1])
-
-    
-    bays = {
-        "compact": Schedule,
-        "medium": Schedule,
-        "full-size": Schedule,
-        "class 1 truck": Schedule,
-        "class 2 truck": Schedule,
-        "any": [Schedule] * 5
+    bays: dict[str, Schedule]= {
+        "compact": [],
+        "medium": [],
+        "full-size": [],
+        "class 1 truck": [],
+        "class 2 truck": [],
+        "general 1": [],
+        "general 2": [],
+        "general 3": [],
+        "general 4": [],
+        "general 5": []
     }
 
     rejected: list[Request] = []
@@ -24,10 +24,9 @@ def solve_day(requests: list[Request]) -> (dict[str, Schedule], list[Request]):
     
     for request in requests:
         (issued, requested, vehicle) = request
-        start = requested
-        end = requested + servicing_time[vehicle]
+        (start, end) = request_start_end(request)
         
-        for schedule in [bays[vehicle], bays["any"][0], bays["any"][1], bays["any"][2], bays["any"][3], bays["any"][4]]:
+        for schedule in [bays[vehicle], bays["general 1"], bays["general 2"], bays["general 3"], bays["general 4"], bays["general 5"]]:
             conflicting: bool = False
             for time in schedule:
                 if time[0] in range(start, end) or time[1] in range(start, end):
@@ -35,12 +34,14 @@ def solve_day(requests: list[Request]) -> (dict[str, Schedule], list[Request]):
                     break
             
             if not conflicting:
-                bays[vehicle].add((start, end))
+                bays[vehicle].append((start, end, request))
                 break
         else:
-            rejected.add(request);
+            rejected.append(request);
 
     return (bays, rejected)
+
+
 
 servicing_time = {
     "compact": 30,
@@ -53,8 +54,16 @@ servicing_time = {
 def issued_time(request: Request) -> str:
     return request[0]
 
+def request_start_end(request: Request) -> (int, int):
+    (_, requested_datetime, vehicle) = request
+    requested_time = requested_datetime.split()[1]
+    [hours, minutes] = requested_time.split(":")
+    start = int(hours) * 60 + int(minutes)
+    end = start + servicing_time[vehicle]
+    return (start, end)
+
 def main() -> None:
-    returned = solve_day([("15:00", 120, "compact"), ("08:00", 90, "class 2 truck")])
+    returned = solve_day([("15:00", "2023-01-01 12:40", "compact"), ("08:00", "2023-01-01 12:50", "class 2 truck")])
     print(returned)
     
 main()
