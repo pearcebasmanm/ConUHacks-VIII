@@ -3,7 +3,7 @@
 todo: fill this with information
 
 * names
-- Abdulrahman Mousa (Rahman)
+    - Abdulrahman Mousa (Rahman)
 * project
 * time
 * ...
