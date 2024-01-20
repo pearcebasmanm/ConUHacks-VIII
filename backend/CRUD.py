@@ -1,4 +1,5 @@
-from main import get_Collection, get_database
+from ConectingDB import get_Collection, get_database
+from bson.objectid import ObjectId
 
 dbname = get_database()
 collection_name = get_Collection()
@@ -9,23 +10,30 @@ def Insert(Datetime_Issued, Datetime_Requested, vehicule_type):
                 "vehicule_type" : vehicule_type}
     collection_name.insert_one(document)
 
-def UpdateDatetime_Issued(NewDatetime_Issued, Datetime_Requested, vehicule_type):
-    collection_name.update_one({"vehicule_type": vehicule_type, "Datetime_Requested": Datetime_Requested}, {"$set": {"Datetime_Issued": NewDatetime_Issued}})
+def UpdateDatetime_Issued(ID, NewDatetime_Issued):
+    collection_name.update_one({"_id": ID}, {"$set": {"Datetime_Issued": NewDatetime_Issued}})
 
-def UpdateDatetime_Requested(Datetime_Issued, NewDatetime_Requested, vehicule_type):
-    collection_name.update_one({"Datetime_Issued": Datetime_Issued, "vehicule_type": vehicule_type}, {"$set": {"Datetime_Requested": NewDatetime_Requested}})
+def UpdateDatetime_Requested(ID, NewDatetime_Requested):
+    collection_name.update_one({"_id": ID}, {"$set": {"Datetime_Requested": NewDatetime_Requested}})
 
-def UpdateVehicle_type(Datetime_Issued, Datetime_Requested, NewVehicule_Type):
-    collection_name.update_one({"Datetime_Issued": Datetime_Issued, "Datetime_Requested": Datetime_Requested}, {"$set": {"vehicule_type": NewVehicule_Type}})
+def UpdateVehicle_type(ID, NewVehicule_Type):
+    collection_name.update_one({"_id": ID}, {"$set": {"vehicule_type": NewVehicule_Type}})
 
-def delete():
-    return 0
+def delete(ID):
+    collection_name.delete_one({"_id": ID})
+    
+def SearchAllvehicule_type(vehicule_type):
+    return collection_name.find({vehicule_type: vehicule_type})
 
-def Search():
-    return 0
+def SearchbyID(ID):
+    return collection_name.find_one({"_id": ID})
 
 def RetrieveAll():
     documents = collection_name.find()
     print("Documents in the collection:")
     for doc in documents:
         print(doc)
+
+if __name__ == "__main__":
+    print(SearchbyID(ObjectId('65ac17d1d6e44d000ea4c295')))
+    
