@@ -1,6 +1,12 @@
 "use client"
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, useAnimation } from 'framer-motion';
+
+interface Entry {
+    name: string;
+    start: number;
+    duration: number;
+}
 
 export default function Simulation() {
     const speed = 0.02;
@@ -8,6 +14,11 @@ export default function Simulation() {
 
     let [simulationStarted, setSimulationStarted] = useState<boolean>(false);
     let [isPlaying, setIsPlaying] = useState<boolean>(false);
+
+    const [data, setData] = useState<Entry[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
+
 
     if (isPlaying) {
         setTimeout(() => {
@@ -20,6 +31,48 @@ export default function Simulation() {
         }, speed);
     }
 
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const res = await fetch('/api/data');
+                if (!res.ok) { throw new Error(res.statusText) }
+
+                const data : Entry[] = await res.json();
+                setData(data);
+            } catch (error : any) {
+                setError(error.message);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        fetchData();
+    }, [])
+
+    if (loading) {
+        return (
+            <div className={"flex justify-center items-center w-screen h-screen"}>
+                <motion.button
+                    className={`font-mono text-[#F9DC5C] bg-[#2E2E2E] font-lg py-4 px-8 m-4 ${simulationStarted ? 'hidden' : 'block'}`}
+                    whileHover={{ scale: 1.1, backgroundColor: '#F9DC5C', color: '#2E2E2E' }}
+                    whileTap={{ scale: 0.9, backgroundColor: '#F9DC5C', color: '#2E2E2E' }}
+                >
+                    Loading...
+                </motion.button>
+            </div>
+        )
+    }
+
+    if (error) {
+        return (
+            <div className={"flex justify-center items-center w-screen h-screen"}>
+                <div className={"font-mono text-[#F9DC5C] font-lg py-4 pr-8 flex items-center"}>
+                    {error}
+                </div>
+            </div>
+        )
+    }
+
     return (
         <motion.div className={"simulation-wrapper flex justify-center items-center border-1 border-[#111] text-xl"} style={{ height: `calc(100vh - 180px)` }}>
             <motion.button
@@ -27,7 +80,7 @@ export default function Simulation() {
                 whileHover={{ scale: 1.1, backgroundColor: '#F9DC5C', color: '#2E2E2E' }}
                 whileTap={{ scale: 0.9, backgroundColor: '#F9DC5C', color: '#2E2E2E' }}
 
-                onClick={ e => { setSimulationStarted(true); } }
+                onClick={ e => { setSimulationStarted(true) } }
             >
                 Start Simulation
             </motion.button>
@@ -77,6 +130,19 @@ export default function Simulation() {
                     />
                 </div>
             </div>
+
+            {data.map((schedule, index) => {
+                return (
+                    <motion.div
+                        key={index}
+                        className={"schedule"}
+                        animate={{ left: `${schedule.start}%`, width: `${schedule.duration}%` }}
+                        transition={{ duration: 1 }}
+                    >
+                        <div className={"schedule-text"}>{schedule.name}</div>
+                    </motion.div>
+                )
+            } )}
 
             <div className={"bays-container flex justify-center items-center font-mono"}>
                 <motion.div className={"bay bay-1 flex justify-center items-center"}>
