@@ -3,66 +3,80 @@ from solutions import *
 import pandas as pd
 
 def main() -> None:
-    # reading requests from csv
+    # reading entries from csv
     df = pd.read_csv("ScheduleInfo.csv")
-    requests = []
+    entries = []
     for index, row in df.iterrows():
         [issued, requested, vehicle] = row.iloc
-        requests.append((issued, requested, vehicle))
+        entries.append((issued, requested, vehicle))
 
-    # sort by day the request was issued
-    requests.sort(key=lambda request: request[1])
+    # sort by day the entry requests
+    entries.sort(key=lambda entry: entry[1])
 
     # chunk the requests by day
     days = []
-    current_day = ""
-    for request in requests:
-        request_day = request[1].split()[0]
-    
-        if request_day > current_day:
-            current_day = request_day
-            days.append([request])
+    current_date = ""
+    for entry in entries:
+        if requested_date(entry) > current_date:
+            current_date = requested_date(entry)
+            days.append([entry])
         else:
-            days[-1].append(request)
+            days[-1].append(entry)
 
-    # find the optimal outcome for each day
     for day in days:
-        result = solve_day(day)
-        # print(result)
+        solve_day(day)
 
 
-def solve_day(requests: list[Request]) -> (dict[str, Schedule], list[Request]):
-    bays = {
+def solve_day(entries: list[Entry]) -> (dict[str, Schedule], list[Entry]) -> None:
+    # set up the containers for the outputs
+    walk_in_bays = {
         "compact": [],
         "medium": [],
         "full-size": [],
         "class 1 truck": [],
         "class 2 truck": [],
-        "general 1": [],
-        "general 2": [],
-        "general 3": [],
-        "general 4": [],
-        "general 5": []
     }
+    booking_bays = [[]] * 5
+    rejected: list[Entry] = []
     
-    rejected: list[Request] = []
-
-    validated_requests = []
-
-    for request in requests:
-        if valid(request):
-            validated_requests.append(request)
+    # split the entries into bookings and walk-ins
+    bookings = []
+    walk_ins = []
+    for entry in day:
+        if issued_date(entry) == requested_date(entry):
+            walk_ins.append(entry)
         else:
-            rejected.append(request)
+            bookings.append(entry)
 
-    reserved_time_chronological(validated_requests, bays, rejected)
-    # issued_time_chronological(validated_requests, bays, rejected)
-    # optimized(validated_requests, bays, rejected)
+    solve_bookings(bookings, booking_bays, rejected)
+    simulate_walk_ins(walk_ins, walk_in_bays, rejected)
+
+
 
     return (bays, rejected)
 
 
-def valid(request: Request) -> bool:
+def solve_bookings(bookings: list[Entry], bays: dict[str, Schedule], rejected: list[Entry]) -> None:
+    # validate bookings
+    validated_bookings = []
+    for booking in bookings:
+        if valid(booking):
+            validated_bookings.append(booking)
+        else:
+            rejected.append(booking)
+    bookings = validated_bookings
+
+    
+
+def simulate_walk_ins(walk_ins: list[Entry], bays: dict[str, Schedule], rejected: list[Entry]) -> None:
+    for walk_in in walk_ins:
+        (start, end) = 
+        
+
+
+
+
+def valid(request: Entry) -> bool:
     (issued, requested, vehicle) = request
     [issued_date, _] = issued.split()
     [requested_date, requested_time] = requested.split()
@@ -74,6 +88,30 @@ def valid(request: Request) -> bool:
     valid_vehicle = vehicle in ["compact", "medium", "full-size", "class 1 truck", "class 2 truck"]
 
     return appropriately_issued and within_active_months and within_active_hours and valid_vehicle
+
+def requested_range(entry: Entry) -> (int, int):
+    [hours, minutes] = time_requested(entry).split(":")
+    start = int(hours) * 60 + int(minutes)
+    end = start + servicing_time[entry[2]]
+    return (start, end)
+
+def date_requested(request: Entry) -> str:
+    return request[1].split()[0]
+
+def time_requested(request: Entry) -> str:
+    return request[1].split()[0]
+
+def date_issued(request: Entry) -> str:
+    return request[0].split()[0]
+
+def time_issued(request: Entry) -> str:
+    return request[0].split()[0]
+
+def date(datetime: str) -> str:
+    return datetime.split()[0]
+
+def time(datetime: str) -> str:
+    return datetime.split()[1]
 
 
 if __name__ == "__main__":
