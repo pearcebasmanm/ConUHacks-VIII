@@ -1,13 +1,10 @@
 import AdminNav from "../components/admin-nav";
 
-export default function Admin() {
+export default function About() {
+
     return (
         <main>
             <AdminNav />
-            <section>
-                <h1>Dashboard</h1>
-
-            </section>
         </main>
     )
 }
