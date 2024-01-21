@@ -2,6 +2,7 @@
 from solutions import *
 from dataclasses import dataclass
 import pandas as pd
+from pymongo import MongoClient
 
 allow_rescheduling = False
 
@@ -82,8 +83,50 @@ def main() -> None:
     # # calculate serviced customers 
     # for (walk_in_bays, booking_bays, _) in outputs_by_day:
     #     for (_, _, vehicle) in walk_in_bays:
-            
 
+    CONNECTION_STRING = "mongodb+srv://max:5678@cluster0.uspsoud.mongodb.net/"
+    def get_database():
+       client = MongoClient(CONNECTION_STRING)
+       return client['Schedule_Optimization']
+
+    db = get_database()
+
+    for (walk_in_bays, booking_bays, turned_away) in outputs_by_day:
+        for bay in walk_in_bays.values():
+            for (start, end, walk_in) in bay:
+                db[walk_in.vehicle].insert_one({
+                    "start_minute": start,
+                    "end_minute": end,
+                    "issued_datetime": walk_in.issued,
+                    "requested_date": walk_in.date_requested(),
+                    "vehicle_type": walk_in.vehicle
+                })
+                     
+
+        for idx, bay in enumerate(booking_bays):
+            for (start, end, booking) in bay:
+                db[f"general {idx + 1}"].insert_one({
+                    "start_minute": start,
+                    "end_minute": end,
+                    "issued_datetime": booking.issued,
+                    "requested_date": booking.date_requested(),
+                    "vehicle_type": booking.vehicle
+                })
+
+        for entry in turned_away:
+            db["turned away"].insert_one({
+                "issued_datetime": entry.issued,
+                "requested_datetime": entry.requested,
+                "vehicle_type": entry.vehicle
+            })
+
+           
+
+# with MongoClient("mongodb+srv://max:5678@cluster0.uspsoud.mongodb.net/", connect=False) as client:
+#     db = client.Schedule_Optimization
+    # tools = db.ScheduleCollectionName
+    # result = tools.insert_many(data)
+    
     
 
 
@@ -142,7 +185,7 @@ def solve_bookings(bookings: list[Entry], bays: list[Schedule], turned_away: lis
 
         available_bay.append((start, end, booking))
 
-    
+        
 
 def simulate_walk_ins(walk_ins: list[Entry], bays: dict[str, Schedule], turned_away: list[Entry]) -> None:
     for walk_in in walk_ins:
