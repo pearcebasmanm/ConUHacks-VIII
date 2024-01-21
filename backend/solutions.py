@@ -1,7 +1,8 @@
 from typing import TypeAlias
+import copy
 
-Request: TypeAlias = (str, str, str)
-Schedule: TypeAlias = list[(int, int, Request)]
+Entry: TypeAlias = (str, str, str)
+Schedule: TypeAlias = list[(int, int, Entry)]
 
 def optimized(requests, bays, rejected) -> None:
     # sort by time
@@ -13,8 +14,8 @@ def optimized(requests, bays, rejected) -> None:
         (_, requested, vehicle) = request
         [_, time] = requested.split()
         (start, end) = request_start_end(time, vehicle)
-        cost = servicing_charge[vehicle]
-        minified_requests.append((start, end, cost))
+        vehicle = VEHICLE_NAMES.index(vehicle)
+        minified_requests.append((start, end, vehicle))
 
     # create compacter versions of the destination structures
     minified_bays = [[]] * 10
@@ -32,29 +33,43 @@ def optimized(requests, bays, rejected) -> None:
 def optimized_recursive(index: int, requests: list[(int, int, int)], bays: list[list[(int, int, int)]], rejected: list[int]) -> int:   
     index = 0
 
-    while True:
-        (start, end, vehicle) = requests[index]
+    current_request = requests[index]
+    (start, end, vehicle) = current_request
+    
+    general = next((idx + 5 for bay in enumerate(bays[5:]) if all(other_start not in range(start, end) and other_end not in range(start, end) for (start, end, _) in bay)), None)
 
-        bays = [BAY_NAMES[idx] for idx, bay in enumerate(bays) if all(other_start not in range(start, end) and other_end not in range(start, end) for (start, end, _) in bay)]
+    dedicated = bays[vehicle] if all(other_start not in range(start, end) and other_end not in range(start, end) for (start, end, _) in bays[vehicle]) else None
 
-        colliders
+    maximum = 0
+    best_bays
+    best_rejected
+    
+    for bay in [general, dedicated]:
+        if bay is None:
+            continue
 
-        place_found: bool = False
-        for schedule in [bays[vehicle], bays["general 1"], bays["general 2"], bays["general 3"], bays["general 4"], bays["general 5"]]:
-            conflicting: bool = False
-            for time in schedule:
-                if time[0] in range(start, end) or time[1] in range(start, end):
-                    conflicting = True
-                    break
+
+        potential_request_indexes = [index]
+
+        # run the simulation for each vehicle that would otherwise take its place
+        colliders_index = index + 1
+        while requests[colliders_index][0] > end:
+            collider = requests[colliders_index]
+            if bay >= 5 or bay == collider[2]:
+                potential_requests.append(colliders_index)
+                        
+        for potential_request_index in potential_request_indexes
+        # run the recursive simulation for the current vehicle
+        sub_bays = copy.deepcopy(bays)
+        sub_rejected = copy.deepcopy(rejected)
+        sub_bay[bay].append((start, collider[1], collider_index))
+        sub_bay
+        parameter = optimized_recursive(colliders_index + 1, requests, sub_bays, sub_rejected)
+        if parameter > maximum:
+            best_bays = sub_bays
+            best_rejected = sub_rejected
+            maximum = parameter
             
-            if not conflicting:
-                bays[vehicle].append((start, end, request))
-                place_found = True
-                break
-
-        if not place_found:
-            print(request, bays)
-            rejected.append(request);
     
 
 def reserved_time_chronological(requests, bays, rejected) -> None:
