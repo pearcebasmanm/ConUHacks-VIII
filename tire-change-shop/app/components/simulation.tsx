@@ -46,17 +46,22 @@ export default function Simulation() {
                 Exit
             </motion.button>
 
-            <div className={"top-10 left-20 absolute time-value"}>{time}</div>
+            <div className={"top-5 left-20 absolute date-picker"}>
+                <div className={"font-mono text-[#F9DC5C] font-lg py-4 pr-8 flex items-center"}>
+                    <div className={"mr-4"}>Date:</div>
+                    <input
+                        type="date"
+                        className={"form-input cursor-pointer bg-transparent px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:border-blue-300 transition duration-300 bg-opacity-0"}
+                    />
+                </div>
+            </div>
 
             <div className={"slider-container fixed top-20 flex justify-center items-center font-mono"}>
                 <div 
                     className={"font-mono text-[#F9DC5C] font-lg py-4 pr-8 flex items-center cursor-pointer"}
                     onClick={e => { setIsPlaying(!isPlaying) } }
                     >
-                    Time 
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 ml-2" fill="none" viewBox="0 0 24 24" stroke="#F9DC5C">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
+                        Click
                 </div>
                 <div className={"w-full relative"}>
                     <div className={"absolute time-indicator first"}>|<br></br>7 AM</div>
@@ -66,7 +71,6 @@ export default function Simulation() {
                         type="range"
                         min="0"
                         max="1000"
-                        defaultValue="0"
                         className="slider w-full"
                         value={time}
                         readOnly
