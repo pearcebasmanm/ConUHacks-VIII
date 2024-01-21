@@ -51,7 +51,7 @@ export default function Simulation() {
 
     if (loading) {
         return (
-            <div className={"flex justify-center items-center w-screen h-screen"}>
+            <div className={"flex justify-center items-center w-full h-screen"}>
                 <motion.button
                     className={`font-mono text-[#F9DC5C] bg-[#2E2E2E] font-lg py-4 px-8 m-4 ${simulationStarted ? 'hidden' : 'block'}`}
                     whileHover={{ scale: 1.1, backgroundColor: '#F9DC5C', color: '#2E2E2E' }}
@@ -65,7 +65,7 @@ export default function Simulation() {
 
     if (error) {
         return (
-            <div className={"flex justify-center items-center w-screen h-screen"}>
+            <div className={"flex justify-center items-center w-full h-screen"}>
                 <div className={"font-mono text-[#F9DC5C] font-lg py-4 pr-8 flex items-center"}>
                     {error}
                 </div>

@@ -2,7 +2,8 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { MongoClient, ServerApiVersion } from 'mongodb';
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
-    const uri = process.env.MONGODB_URI || "mongodb+srv://ADMIN:12345@cluster0.uspsoud.mongodb.net/?retryWrites=true&w=majority";        ;
+    console.log("API called");
+    const uri = process.env.MONGODB_URI || "mongodb+srv://ADMIN:qwe123qwe123@cluster0.uspsoud.mongodb.net/?retryWrites=true&w=majority";
     const dbName = process.env.MONGODB_DB || 'Schedule_Optimization';
 
     if (!uri || !dbName) {
@@ -19,7 +20,9 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     })
 
     try {
+        console.log("Connecting...")
         await client.connect();
+        console.log("Connected to MongoDB")
         const db = client.db(dbName);
 
         console.log("Connected to MongoDB");
