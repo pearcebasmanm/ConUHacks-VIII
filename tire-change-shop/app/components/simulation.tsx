@@ -1,66 +1,122 @@
-
-// <motion.button
-// style={{
-//   fontSize: '20px', // make the button text bigger
-//   padding: '10px 20px', // increase button size by padding
-//   margin: 'auto', // center the button
-//   display: 'block', // necessary for margin: auto to work
-// }}
-// whileHover={{ scale: 1.1 }} // animate button on hover
-// whileTap={{ scale: 0.9 }} // animate button on tap
-// >
-// Start Simulation
-// </motion.button>
-// <div className="simulation hidden">
-// <SliderComponent value={sliderValue} onChange={setSliderValue} />
-// </div>
-
-import { motion } from 'framer-motion';
+"use client"
+import { useState } from 'react';
+import { motion, useAnimation } from 'framer-motion';
 
 export default function Simulation() {
+    const speed = 0.02;
+    let [time, setTime] = useState<number>(0);
+
+    let [simulationStarted, setSimulationStarted] = useState<boolean>(false);
+    let [isPlaying, setIsPlaying] = useState<boolean>(false);
+
+    if (isPlaying) {
+        setTimeout(() => {
+            if (time >= 1000) {
+                setTime(0);
+                setIsPlaying(false);
+                return;
+            }
+            setTime(time + speed);
+        }, speed);
+    }
+
     return (
         <motion.div className={"simulation-wrapper flex justify-center items-center border-1 border-[#111] text-xl"} style={{ height: `calc(100vh - 180px)` }}>
             <motion.button
-                className={"font-mono text-[#F9DC5C] bg-[#2E2E2E] font-lg py-4 px-8 m-4"}
+                className={`font-mono text-[#F9DC5C] bg-[#2E2E2E] font-lg py-4 px-8 m-4 ${simulationStarted ? 'hidden' : 'block'}`}
                 whileHover={{ scale: 1.1, backgroundColor: '#F9DC5C', color: '#2E2E2E' }}
                 whileTap={{ scale: 0.9, backgroundColor: '#F9DC5C', color: '#2E2E2E' }}
 
-                onClick={e => {
-                    document.querySelector('.simulation').classList.remove('hidden');
-                    document.querySelector('.simulation').classList.add('flex');
-                    e.target.classList.add('hidden');
-                }}
+                onClick={ e => { setSimulationStarted(true); } }
             >
                 Start Simulation
             </motion.button>
             <motion.div 
-                className="simulation hidden w-screen h-screen fixed left-0 bg-[#2E2E2E] text-[#F9DC5C] flex justify-center items-center"
+                className={`simulation ${simulationStarted ? 'block' : 'hidden'} w-screen h-screen fixed left-0 bg-[#2E2E2E] text-[#F9DC5C] flex justify-center items-center`}
                 initial={{ opacity: 0, top: 100, scale: 0.9 }}
                 animate={{ opacity: 1, top: 0, scale: 1 }}
                 transition={{ duration: 1 }}
             >
-                <motion.button
-                    className={"font-mono text-[#F9DC5C] bg-[#2E2E2E] font-lg py-4 px-8 m-4 absolute top-0 right-0"}
-                    whileHover={{ scale: 1.1, backgroundColor: '#F9DC5C', color: '#2E2E2E' }}
-                    whileTap={{ scale: 0.9, backgroundColor: '#F9DC5C', color: '#2E2E2E' }}
+            <motion.button
+                className={"font-mono text-[#F9DC5C] bg-[#2E2E2E] font-lg py-4 px-8 m-4 absolute top-0 right-0"}
+                whileHover={{ scale: 1.1, backgroundColor: '#F9DC5C', color: '#2E2E2E' }}
+                whileTap={{ scale: 0.9, backgroundColor: '#F9DC5C', color: '#2E2E2E' }}
+                onClick={e => window.location.reload()}
+            >
+                Exit
+            </motion.button>
 
-                    onClick={e => {
-                        document.querySelector('.simulation').classList.remove('flex');
-                        document.querySelector('.simulation').classList.add('hidden');
-                        document.querySelector('.simulation-wrapper button').classList.remove('hidden');
-                    }}
-                >
-                    Close
-                </motion.button>
-                <div className={"slider-container"}>
+            <div className={"top-10 left-20 absolute time-value"}>{time}</div>
+
+            <div className={"slider-container fixed top-20 flex justify-center items-center font-mono"}>
+                <div 
+                    className={"font-mono text-[#F9DC5C] font-lg py-4 pr-8 flex items-center cursor-pointer"}
+                    onClick={e => { setIsPlaying(!isPlaying) } }
+                    >
+                    Time 
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 ml-2" fill="none" viewBox="0 0 24 24" stroke="#F9DC5C">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                </div>
+                <div className={"w-full relative"}>
+                    <div className={"absolute time-indicator first"}>|<br></br>7 AM</div>
+                    <div className={"absolute time-indicator half"}>|<br></br>12 PM</div>
+                    <div className={"absolute time-indicator last"}>|<br></br>7 PM</div>
                     <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    className="slider"
+                        type="range"
+                        min="0"
+                        max="1000"
+                        defaultValue="0"
+                        className="slider w-full"
+                        value={time}
+                        readOnly
                     />
                 </div>
-            </motion.div>
+            </div>
+
+            <div className={"bays-container flex justify-center items-center font-mono"}>
+                <motion.div className={"bay bay-1 flex justify-center items-center"}>
+                    <div className={"bay-number"}>1</div>
+                    <div className={"bay-vehicle"}></div>
+                </motion.div>
+                <motion.div className={"bay bay-2 flex justify-center items-center"}>
+                    <div className={"bay-number"}>2</div>
+                    <div className={"bay-vehicle"}></div>
+                </motion.div>
+                <motion.div className={"bay bay-3 flex justify-center items-center"}>
+                    <div className={"bay-number"}>3</div>
+                    <div className={"bay-vehicle"}></div>
+                </motion.div>
+                <motion.div className={"bay bay-4 flex justify-center items-center"}>
+                    <div className={"bay-number"}>4</div>
+                    <div className={"bay-vehicle"}></div>
+                </motion.div>
+                <motion.div className={"bay bay-5 flex justify-center items-center"}>
+                    <div className={"bay-number"}>5</div>
+                    <div className={"bay-vehicle"}></div>
+                </motion.div>
+                <motion.div className={"bay bay-6 flex justify-center items-center"}>
+                    <div className={"bay-number"}>6</div>
+                    <div className={"bay-vehicle"}></div>
+                </motion.div>
+                <motion.div className={"bay bay-7 flex justify-center items-center"}>
+                    <div className={"bay-number"}>7</div>
+                    <div className={"bay-vehicle"}></div>
+                </motion.div>
+                <motion.div className={"bay bay-8 flex justify-center items-center"}>
+                    <div className={"bay-number"}>8</div>
+                    <div className={"bay-vehicle"}></div>
+                </motion.div>
+                <motion.div className={"bay bay-9 flex justify-center items-center"}>
+                    <div className={"bay-number"}>9</div>
+                    <div className={"bay-vehicle"}></div>
+                </motion.div>
+                <motion.div className={"bay bay-10 flex justify-center items-center"}>
+                    <div className={"bay-number"}>10</div>
+                    <div className={"bay-vehicle"}></div>
+                </motion.div>
+            </div>
         </motion.div>
+    </motion.div>
     )    
 }
