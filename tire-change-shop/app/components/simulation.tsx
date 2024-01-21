@@ -3,19 +3,34 @@ import { useState, useEffect } from 'react';
 import { motion, useAnimation } from 'framer-motion';
 
 interface Entry {
-    name: string;
-    start: number;
-    duration: number;
+    _id: string;
+    Datetime_Issued: string;
+    Datetime_Requested: string;
+    vehicle_type: string;
+    year_Issued: number;
+    month_Issued: number;
+    day_Issued: number;
+    hour_Issued: number;
+    minute_Issued: number;
+    year_Requested: number;
+    month_Requested: number;
+    day_Requested: number;
+    hour_Requested: number;
+    minute_Requested: number;
+    minute_Sum: number;
+    is_WalkIn: boolean;
 }
 
 export default function Simulation() {
     const speed = 0.02;
+    let [date, setDate] = useState<Date>(new Date());
     let [time, setTime] = useState<number>(0);
 
     let [simulationStarted, setSimulationStarted] = useState<boolean>(false);
     let [isPlaying, setIsPlaying] = useState<boolean>(false);
 
     const [data, setData] = useState<Entry[]>([]);
+    const [firstDate, setFirstDate] = useState<Date>(new Date());
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -31,12 +46,15 @@ export default function Simulation() {
         }, speed);
     }
 
+
     useEffect(() => {
         const fetchData = async () => {
             try {
+                // Just add the date in the query and send it as a get request
                 const res = await fetch('/api/data');
-                if (!res.ok) { throw new Error(res.statusText) }
+                
 
+                if (!res.ok) { throw new Error(res.statusText) }
                 const data : Entry[] = await res.json();
                 setData(data);
             } catch (error : any) {
@@ -45,13 +63,13 @@ export default function Simulation() {
                 setLoading(false);
             }
         }
-
         fetchData();
     }, [])
 
+
     if (loading) {
         return (
-            <div className={"flex justify-center items-center w-screen h-screen"}>
+            <div className={"flex justify-center items-center w-full h-screen"}>
                 <motion.button
                     className={`font-mono text-[#F9DC5C] bg-[#2E2E2E] font-lg py-4 px-8 m-4 ${simulationStarted ? 'hidden' : 'block'}`}
                     whileHover={{ scale: 1.1, backgroundColor: '#F9DC5C', color: '#2E2E2E' }}
@@ -65,7 +83,7 @@ export default function Simulation() {
 
     if (error) {
         return (
-            <div className={"flex justify-center items-center w-screen h-screen"}>
+            <div className={"flex justify-center items-center w-full h-screen"}>
                 <div className={"font-mono text-[#F9DC5C] font-lg py-4 pr-8 flex items-center"}>
                     {error}
                 </div>
@@ -104,7 +122,24 @@ export default function Simulation() {
                     <div className={"mr-4"}>Date:</div>
                     <input
                         type="date"
+                        name="date"
+                        defaultValue={`${firstDate}`}
                         className={"form-input cursor-pointer bg-transparent px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:border-blue-300 transition duration-300 bg-opacity-0"}
+                        onChange={async e => {
+                            const date = new Date(e.target.value);
+                            const year = date.getFullYear();
+                            const month = date.getMonth() + 1;
+                            const day = date.getDate();
+                            const newDate = new Date(year, month, day);
+                            setDate(newDate);
+
+                            const res = await fetch('/api/data/?date=' + JSON.stringify(newDate));
+
+                            if (!res.ok) { throw new Error(res.statusText) }
+                            const data : Entry[] = await res.json();
+
+                            setData(data);
+                        }}
                     />
                 </div>
             </div>
@@ -135,11 +170,12 @@ export default function Simulation() {
                 return (
                     <motion.div
                         key={index}
-                        className={"schedule"}
-                        animate={{ left: `${schedule.start}%`, width: `${schedule.duration}%` }}
+                        className={`schedule ${schedule.vehicle_type}`}
+                        initial={{ left: `-${schedule.minute_Sum}%`, opacity: 0 }}
+                        animate={{ left: `0`, opacity: 1 }}
                         transition={{ duration: 1 }}
                     >
-                        <div className={"schedule-text"}>{schedule.name}</div>
+                        <div className={`schedule-text`}>{schedule.vehicle_type}</div>
                     </motion.div>
                 )
             } )}
