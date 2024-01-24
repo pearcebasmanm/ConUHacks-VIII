@@ -7,6 +7,8 @@ from pymongo import MongoClient
 allow_rescheduling = False
 
 def main() -> None:
+    global is_first_day
+    is_first_day = True
     # reading entries from csv
     df = pd.read_csv("ScheduleInfo.csv")
     entries = []
@@ -32,10 +34,10 @@ def main() -> None:
     # call the simulation algoritm for each day, storing the result
     outputs_by_day = []
     for day in days:
-        outputs_by_day.append(solve_day(day))
+        result = solve_day(day)
+        outputs_by_day.append(result)
 
-
-    total_revenue = 0
+    total_revenue= 0
     total_revenue_loss = 0
     serviced_customers = {
         "compact": 0,
@@ -52,82 +54,58 @@ def main() -> None:
         "class 2 truck": 0,
     }
 
-    # sum = 0
-
     for (walk_in_bays, booking_bays, turned_away) in outputs_by_day:
         for bay in walk_in_bays.values():
-            print(len(bay))
             for (_, _, walk_in) in bay:
                 total_revenue += servicing_charge[walk_in.vehicle]
                 serviced_customers[walk_in.vehicle] += 1;
                      
 
         for bay in booking_bays:
-            print(len(bay))
             for (_, _, booking) in bay:
                 total_revenue += servicing_charge[booking.vehicle]
                 serviced_customers[booking.vehicle] += 1;
 
-        print(len(turned_away))
         for entry in turned_away:
             total_revenue_loss += servicing_charge[entry.vehicle]
             potential_customers[entry.vehicle] += 1;
 
-
-    # print(sum)
     print(total_revenue)
     print(total_revenue_loss)
     print(serviced_customers)
     print(potential_customers)
 
-    # # calculate serviced customers 
-    # for (walk_in_bays, booking_bays, _) in outputs_by_day:
-    #     for (_, _, vehicle) in walk_in_bays:
+    # CONNECTION_STRING = "mongodb+srv://max:5678@cluster0.uspsoud.mongodb.net/"
+    # DATABASE_NAME = "Schedule_Optimization"
+    # db = MongoClient(CONNECTION_STRING)[DATABASE_NAME]
 
-    CONNECTION_STRING = "mongodb+srv://max:5678@cluster0.uspsoud.mongodb.net/"
-    def get_database():
-       client = MongoClient(CONNECTION_STRING)
-       return client['Schedule_Optimization']
+    # for (walk_in_bays, booking_bays, turned_away) in outputs_by_day:
+    #     for bay in walk_in_bays.values():
+    #         for (start, end, walk_in) in bay:
+    #             db[walk_in.vehicle].insert_one({
+    #                 "start_minute": start,
+    #                 "end_minute": end,
+    #                 "issued_datetime": walk_in.issued,
+    #                 "requested_date": walk_in.date_requested(),
+    #                 "vehicle_type": walk_in.vehicle
+    #             })
 
-    db = get_database()
+    #     for idx, bay in enumerate(booking_bays):
+    #         for (start, end, booking) in bay:
+    #             db[f"general {idx + 1}"].insert_one({
+    #                 "start_minute": start,
+    #                 "end_minute": end,
+    #                 "issued_datetime": booking.issued,
+    #                 "requested_date": booking.date_requested(),
+    #                 "vehicle_type": booking.vehicle
+    #             })
 
-    for (walk_in_bays, booking_bays, turned_away) in outputs_by_day:
-        for bay in walk_in_bays.values():
-            for (start, end, walk_in) in bay:
-                db[walk_in.vehicle].insert_one({
-                    "start_minute": start,
-                    "end_minute": end,
-                    "issued_datetime": walk_in.issued,
-                    "requested_date": walk_in.date_requested(),
-                    "vehicle_type": walk_in.vehicle
-                })
-                     
-
-        for idx, bay in enumerate(booking_bays):
-            for (start, end, booking) in bay:
-                db[f"general {idx + 1}"].insert_one({
-                    "start_minute": start,
-                    "end_minute": end,
-                    "issued_datetime": booking.issued,
-                    "requested_date": booking.date_requested(),
-                    "vehicle_type": booking.vehicle
-                })
-
-        for entry in turned_away:
-            db["turned away"].insert_one({
-                "issued_datetime": entry.issued,
-                "requested_datetime": entry.requested,
-                "vehicle_type": entry.vehicle
-            })
-
-           
-
-# with MongoClient("mongodb+srv://max:5678@cluster0.uspsoud.mongodb.net/", connect=False) as client:
-#     db = client.Schedule_Optimization
-    # tools = db.ScheduleCollectionName
-    # result = tools.insert_many(data)
-    
-    
+    #     for entry in turned_away:
+    #         db["turned away"].insert_one({
+    #             "issued_datetime": entry.issued,
+    #             "requested_datetime": entry.requested,
+    #             "vehicle_type": entry.vehicle
+    #         })
 
 
 def solve_day(entries: list[Entry]) -> (dict[str, Schedule], list[Schedule], list[Entry]):
@@ -139,7 +117,7 @@ def solve_day(entries: list[Entry]) -> (dict[str, Schedule], list[Schedule], lis
         "class 1 truck": [],
         "class 2 truck": [],
     }
-    booking_bays = [[]] * 5
+    booking_bays = [[] for _ in range(5)]
     turned_away: list[Entry] = []
     
     # split the entries into bookings and walk-ins
@@ -169,6 +147,7 @@ def solve_bookings(bookings: list[Entry], bays: list[Schedule], turned_away: lis
 
     # secondary datetime-issued-centric ordering still preserved from main
     # as such the goal of this shop is that the first to book a time is the one who gets it
+    count = 0
     for booking in validated_bookings:
         (start, end) = booking.range_requested()
         this_range = range(start, end)
@@ -176,12 +155,8 @@ def solve_bookings(bookings: list[Entry], bays: list[Schedule], turned_away: lis
         available_bay = next((bay for bay in bays if all(other_start not in this_range and other_end not in this_range for (other_start, other_end, _) in bay)), None)
 
         if available_bay == None:
-            if allow_rescheduling:
-                # this is where you would reschedule if that was a design decision you madeo
-                print("unimplemented by choice")
-            else:
-                turned_away.append(booking)
-                continue
+            turned_away.append(booking)
+            continue
 
         available_bay.append((start, end, booking))
 
