@@ -22,18 +22,10 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         await client.connect();
         
         const db = client.db(dbName);
-        let data, date;
+        let data : any[] = [], date;
 
         if (req.query.date) {
             date = req.query.date;
-        }
-        
-        if (!date) {
-            data = await db.collection('ScheduleCollectionName').find().toArray();
-            date = data[0].Datetime_Requested;
-            data = await db.collection('ScheduleCollectionName').find({ Datetime_Requested: { $gte: new Date(date), $lt: new Date(date + 1) } }).toArray();
-        } else {
-            data = await db.collection('ScheduleCollectionName').find({ Datetime_Requested: { $gte: new Date(date), $lt: new Date(date + 1) } }).toArray();
         }
 
         res.status(200).json(data);
